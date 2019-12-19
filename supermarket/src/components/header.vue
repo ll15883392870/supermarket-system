@@ -13,8 +13,12 @@
             <i class="el-icon-arrow-down el-icon--right"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item>个人中心</el-dropdown-item>
-            <el-dropdown-item>退出登录</el-dropdown-item>
+            <el-dropdown-item>
+              <span @click="person">个人中心</span>
+            </el-dropdown-item>
+            <el-dropdown-item>
+              <span @click="exitlogin">退出登录</span>
+            </el-dropdown-item>
           </el-dropdown-menu>
         </el-dropdown>
 
@@ -25,10 +29,37 @@
   </div>
 </template>
 <script>
-export default {};
+export default {
+  data() {
+    return {};
+  },
+  methods: {
+    person() {
+      this.$router.push("/personal");
+    },
+    exitlogin() {
+      // 设置axios允许携带cookie
+      // this.axios.defaults.withCredentials = true;
+      this.axios.get("http://127.0.0.1:3000/users/exitlogin").then(Response => {
+        if (Response.data.Code == 1) {
+          this.$message({
+            type: "success",
+            message: Response.data.Msg
+          });
+          setTimeout(() => {
+            this.$router.push("/login");
+          }, 2000);
+        }
+      });
+    }
+  }
+};
 </script>
 <style lang="less">
 .header {
+  .el-dropdown {
+    cursor: pointer;
+  }
   .el-header {
     position: relative;
     height: 60px;
@@ -53,7 +84,7 @@ export default {};
         line-height: 60px;
         border-radius: 50%;
         text-align: center;
-        background-image: url('../assets/head.png');
+        background-image: url("../assets/head.png");
         background-size: cover;
       }
     }

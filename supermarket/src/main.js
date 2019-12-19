@@ -8,10 +8,39 @@ import store from './store'
 import axios from 'axios'
 import moment from 'moment'
 
-Vue.prototype.axios=axios
+Vue.prototype.axios = axios
 Vue.use(ElementUI);
 
-Vue.filter("dataFormat",function(dataStr,patten="YYYY-MM-DD HH:mm:ss"){
+//全局路由守卫
+router.beforeEach((to, from, next) => {
+
+  // 定义登录状态
+  let isLogin;
+
+  // 设置axios允许携带cookie
+  axios.defaults.withCredentials = true;
+
+  // 发送请求去检查用户是否登陆（是否有cookie)
+  axios.get("http://127.0.0.1:3000/users/checkislogin").then(Response => {
+    isLogin = Response.data.isLogin;
+    if (!isLogin) {
+      if (to.path !== '/login') {
+        return next({
+          "path": "/login"
+        })
+      } 
+    } else {
+      //已经登陆
+      // 放行
+      next()
+    }
+  })
+  next()
+
+
+})
+
+Vue.filter("dataFormat", function (dataStr, patten = "YYYY-MM-DD HH:mm:ss") {
   return moment(dataStr).format(patten)
 })
 

@@ -8,6 +8,7 @@ import system from '@/views/system/systeminfo.vue'
 import usermanage from '@/views/user/usermanage.vue'
 import useradd from '@/views/user/useradd.vue'
 import editpassword from '@/views/user/editpassword.vue'
+import personal from '@/views/user/personal.vue'
 //商品
 import goodsadd from '@/views/goods/goodsadd.vue'
 import goodsmanage from '@/views/goods/goodsmanage.vue'
@@ -26,7 +27,7 @@ const routes = [{
     path: '/',
     component: Index,
     children: [{
-      //系统主页
+        //系统主页
         name: 'index',
         path: '',
         component: system,
@@ -43,32 +44,37 @@ const routes = [{
         path: '/usermanage',
         component: usermanage,
       },
-      {//修改密码
+      { //修改密码
         name: 'editpassword',
         path: '/editpassword',
         component: editpassword,
       },
-       {//商品添加
+      { //商品添加
         name: 'goodsadd',
         path: '/goodsadd',
         component: goodsadd,
       },
-       {//商品管理
+      { //商品管理
         name: 'goodsmanage',
         path: '/goodsmanage',
         component: goodsmanage,
       },
-       {//销售统计
+      { //销售统计
         name: 'salescharts',
         path: '/salescharts',
         component: salescharts,
       },
-       {//进货统计
+      { //进货统计
         name: 'stockcharts',
         path: '/stockcharts',
         component: stockcharts,
       },
-      
+      { //个人信息
+        name: 'personal',
+        path: '/personal',
+        component: personal
+      },
+
     ]
   }
 ]

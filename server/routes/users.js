@@ -5,7 +5,9 @@ var router = express.Router();
 
 //设置多个响应头，拦截所有请求
 router.all('*', (req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:8080");
+  // 设置允许cookie
+  res.setHeader("Access-Control-Allow-Credentials", true)
   //给其他路由放行
   next();
 })
@@ -13,6 +15,67 @@ router.all('*', (req, res, next) => {
 
 // 引入数据库
 const connection = require('./connet.js')
+
+//接收登录检查请求
+router.post('/checklogin', (req, res) => {
+  let {
+    username,
+    password
+  } = req.body;
+  const sqlstr = `select * from users where username='${username}' and password='${password}'`
+  connection.query(sqlstr, (err, data) => {
+    if (err) {
+      throw err
+    } else {
+      if (data.length) {
+        // 设置cookie
+        res.cookie("userid", data[0].id)
+        res.cookie("username", data[0].username)
+
+        res.send({
+          "errCode": 1,
+          "Msg": "家乐美欢迎您"
+        })
+      } else {
+        res.send({
+          "errCode": 0,
+          "errMsg": "请检查用户名或密码"
+        })
+      }
+    }
+  })
+
+})
+
+// 检查用户登录状态
+router.get('/checkislogin', (req, res) => {
+  let userid = req.cookies.userid;
+  let username = req.cookies.username;
+  if (userid && username) {
+    // 存在
+    res.send({
+      "isLogin": true
+    })
+  } else {
+    // 不存在
+    res.send({
+      "isLogin": false
+    })
+
+  }
+
+})
+
+//退出登录请求
+router.get('/exitlogin', (req, res) => {
+  res.clearCookie('userid'),
+  res.clearCookie('username')
+  res.send({
+    "Code": "1",
+    "Msg": '退出成功'
+  })
+
+})
 
 // 接收添加账号请求
 router.post('/adduser', (req, res) => {
@@ -132,7 +195,7 @@ router.post('/saveedit', (req, res) => {
 
 //接收删除勾选请求
 router.post('/deteleall', (req, res) => {
- 
+
   let {
     idArr
   } = req.body;
@@ -157,4 +220,5 @@ router.post('/deteleall', (req, res) => {
   })
 
 })
+
 module.exports = router;

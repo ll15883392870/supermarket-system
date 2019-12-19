@@ -20,9 +20,6 @@
         <el-form-item label="密码" prop="password">
           <el-input type="password" v-model="loginForm.password" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="确认密码" prop="checkpw">
-          <el-input type="password" v-model="loginForm.checkpw"></el-input>
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm('loginForm')">登录</el-button>
           <el-button @click="resetForm('loginForm')">重置</el-button>
@@ -33,24 +30,13 @@
 </template>
 
 <script>
+import qs from "qs";
 export default {
   data() {
-    //自定义验证密码函数
-    var checkpassword = (rule, value, callback) => {
-      if (value === "") {
-        callback(new Error("请再次输入密码"));
-      } else if (value !== this.loginForm.password) {
-        callback(new Error("两次输入密码不一致!"));
-      } else {
-        callback();
-      }
-    };
-
     return {
       loginForm: {
         username: "",
-        password: "",
-        checkpw: ""
+        password: ""
       },
       loginRules: {
         //用户名
@@ -62,17 +48,6 @@ export default {
         password: [
           { required: true, message: "请输入密码", trigger: "blur" },
           { min: 3, max: 12, message: "长度在3到12个字符之间", trigger: "blur" }
-        ],
-        //验证密码--自定义验证规则
-        checkpw: [
-          { required: true, message: "请再次输入密码", trigger: "blur" },
-          {
-            min: 3,
-            max: 12,
-            message: "长度在3到12个字符之间",
-            trigger: "blur"
-          },
-          { validator: checkpassword, trigger: "blur" }
         ]
       }
     };
@@ -82,13 +57,34 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           //收集账号密码
-          let username = this.loginForm.username;
-          let password = this.loginForm.password;
-
-          //路由跳转
-          this.$router.push('/')
-
-          alert("登录成功!");
+          let userlogin = {
+            username: this.loginForm.username,
+            password: this.loginForm.password
+          };
+          // 设置axios允许携带cookie
+          this.axios.defaults.withCredentials=true;
+          this.axios
+            .post(
+              "http://127.0.0.1:3000/users/checklogin",
+              qs.stringify(userlogin),
+              {
+                headers: { "Content-type": "application/x-www-form-urlencoded" }
+              }
+            )
+            .then(Response => {
+              if (Response.data.errCode == 1) {
+                this.$message({
+                  type: "success",
+                  message: Response.data.Msg
+                });
+                //路由跳转
+                setTimeout(() => {
+                  this.$router.push("/");
+                }, 1500);
+              } else {
+                this.$message.error(`${Response.data.errMsg}`);
+              }
+            });
         } else {
           console.log("error submit!!");
           return false;
@@ -107,7 +103,7 @@ export default {
   height: 100%;
   .login-form {
     width: 500px;
-    height: 350px;
+    height: 300px;
     position: fixed;
     padding-right: 40px;
     top: 0;
