@@ -19,7 +19,7 @@
         </el-dropdown>
 
         <!-- 用户头像 -->
-        <div class="avator">11</div>
+        <div class="avator"></div>
       </div>
     </el-header>
   </div>
@@ -48,12 +48,13 @@ export default {};
       float: right;
       align-items: center;
       .avator {
-        background-color: red;
         width: 50px;
         height: 50px;
         line-height: 60px;
         border-radius: 50%;
         text-align: center;
+        background-image: url('../assets/head.png');
+        background-size: cover;
       }
     }
   }

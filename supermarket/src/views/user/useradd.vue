@@ -22,15 +22,15 @@
               <el-input type="text" v-model="adduserForm.username" auto-complete="off"></el-input>
             </el-form-item>
             <el-form-item label="密码" prop="password">
-              <el-input type="password" v-model="adduserForm.password" auto-complete="off"></el-input>
+              <el-input type="text" v-model="adduserForm.password" auto-complete="off"></el-input>
             </el-form-item>
             <el-form-item label="确认密码" prop="checkpw">
-              <el-input type="password" v-model="adduserForm.checkpw"></el-input>
+              <el-input type="text" v-model="adduserForm.checkpw"></el-input>
             </el-form-item>
             <el-form-item label="活动区域" prop="usergroup">
               <el-select v-model="adduserForm.usergroup" placeholder="请选择活动区域">
                 <el-option label="超级管理员" value="超级管理员"></el-option>
-                <el-option label="普通管理员" value="普通管理员"></el-option>
+                <el-option label="普通用户" value="普通用户"></el-option>
               </el-select>
             </el-form-item>
             <el-form-item>
@@ -113,12 +113,29 @@ export default {
           // console.log(user.username + user.password + user.usergroup);
           // console.log(this.axios);
           this.axios
-            .post("/url", qs.stringify(user), {
+            .post("http://127.0.0.1:3000/users/adduser", qs.stringify(user), {
               "headers": {'Content-Type': 'application/x-www-form-urlencoded'}
             })
             .then(Response => {
-              console.log(Response);
+              //接收后端响应数据
+              
+              if(Response.data.errCode==1){
+               this.$message({
+                 type:'success',
+                 message:Response.data.errMsg
+               })
+                this.adduserForm.username=""
+                this.adduserForm.password=""
+                this.adduserForm.usergroup=""
+
+                // 跳转页面
+                this.$router.push('/usermanage')
+              }else{
+                this.$message.err(`${Response.data.errMsg}`)
+              }
             });
+
+            
         } else {
           console.log("error submit!!");
           return false;

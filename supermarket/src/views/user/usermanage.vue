@@ -21,23 +21,53 @@
             <el-table-column prop="usergroup" label="用户组"></el-table-column>
 
             <el-table-column label="创建时间">
-              <template slot-scope="scope">{{ scope.row.date }}</template>
+              <template slot-scope="scope">{{ scope.row.date|dataFormat }}</template>
             </el-table-column>
             <el-table-column label="操作">
               <template slot-scope="scope">
-                <el-button size="mini" type="primary" @click="handleEdit(scope.$index, scope.row)"><i class="el-icon-edit"></i>修改</el-button>
-                <el-button
-                  size="mini"
-                  type="danger"
-                  @click="handleDelete(scope.$index, scope.row)"
-                ><i class="el-icon-delete"></i>删除</el-button>
+                <el-button size="mini" type="primary" @click="handleEdit( scope.row.id)">
+                  <i class="el-icon-edit"></i>修改
+                </el-button>
+                <el-button size="mini" type="danger" @click="handleDelete( scope.row.id)">
+                  <i class="el-icon-delete"></i>删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
-          <!-- <div style="margin-top: 20px">
-            <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
+
+          <!-- 弹出修改框 -->
+          <el-dialog title="修改用户" :visible.sync="dialogFormVisible" width="40%">
+            <el-form
+              :model="editForm"
+              status-icon
+              :rules="editrules"
+              ref="editForm"
+              label-width="100px"
+              class="demo-ruleForm"
+            >
+              <el-form-item label="账号" prop="username">
+                <el-input type="text" v-model="editForm.username" auto-complete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="密码" prop="password">
+                <el-input type="text" v-model="editForm.password" auto-complete="off"></el-input>
+              </el-form-item>
+              <el-form-item label="活动区域" prop="usergroup">
+                <el-select v-model="editForm.usergroup" placeholder="请选择活动区域">
+                  <el-option label="超级管理员" value="超级管理员"></el-option>
+                  <el-option label="普通用户" value="普通用户"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+              <el-button @click="dialogFormVisible = false">取 消</el-button>
+              <el-button type="primary" @click="submitForm('editForm')">确 定</el-button>
+            </div>
+          </el-dialog>
+
+          <div style="margin-top: 20px">
+            <el-button type="danger" @click="deleteall()">删除勾选</el-button>
             <el-button @click="toggleSelection()">取消选择</el-button>
-          </div>-->
+          </div>
         </div>
       </el-card>
     </el-main>
@@ -46,49 +76,159 @@
   </div>
 </template>
 <script>
+import qs from "qs";
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
 export default {
   data() {
     return {
+      selecteduser: [], //保存选择用户
+      dialogFormVisible: false,
+      editid: "",
       tableData: [
         {
-          username: "王小虎",
-          date: "2019-05-03",
-          usergroup: "超级管理员"
-        },
-        {
-          username: "张晓",
-          date: "2019-05-03",
-          usergroup: "普通用户"
+          username: "",
+          password: "",
+          usergroup: "",
+          date: ""
         }
-      ]
+      ],
+      editForm: {
+        //修改账户数据
+        username: "",
+        password: "",
+        usergroup: ""
+      },
+      editrules: {
+        //用户名
+        username: [
+          { required: true, message: "请输入账户名", trigger: "blur" },
+          { min: 3, max: 12, message: "长度在3到12个字符之间", trigger: "blur" }
+        ],
+        //密码
+        password: [
+          { required: true, message: "请输入密码", trigger: "blur" },
+          { min: 3, max: 12, message: "长度在3到12个字符之间", trigger: "blur" }
+        ],
+        //验证用户组
+        usergroup: [
+          { required: true, message: "请选择用户组", trigger: "change" }
+        ]
+      }
     };
   },
   components: {
     Header,
     Footer
   },
+  created() {
+    this.getuserlist();
+  },
   methods: {
-    toggleSelection(rows) {
-      if (rows) {
-        rows.forEach(row => {
-          this.$refs.multipleTable.toggleRowSelection(row);
-        });
-      } else {
-        this.$refs.multipleTable.clearSelection();
-      }
+    toggleSelection() {
+      //取消选择
+      this.$refs.multipleTable.clearSelection();
     },
+    // 选择状态改变函数
     handleSelectionChange(val) {
-      this.multipleSelection = val;
+      this.selecteduser = val;
     },
-    // 编辑函数
-    handleEdit(index, row) {
-      console.log("修改"+index, row);
+    // 修改函数
+    handleEdit(id) {
+      this.editid = id;
+      this.axios
+        .get(`http://127.0.0.1:3000/users/edituser?id=${id}`)
+        .then(Response => {
+          this.editForm.username = Response.data[0].username;
+          this.editForm.password = Response.data[0].password;
+          this.editForm.usergroup = Response.data[0].usergroup;
+          this.dialogFormVisible = true;
+        });
     },
     //   删除函数
-    handleDelete(index, row) {
-      console.log("删除"+index, row);
+    handleDelete(id) {
+      this.axios
+        .get(`http://127.0.0.1:3000/users/deleuser?id=${id}`)
+        .then(Response => {
+          //接收后端响应数据
+          if (Response.data.errCode == 1) {
+            this.$message({
+              type: "success",
+              message: Response.data.errMsg
+            });
+          } else {
+            this.$message.err(`${Response.data.errMsg}`);
+          }
+        });
+      this.getuserlist();
+    },
+    // 获取所有数据
+    getuserlist() {
+      this.axios.get("http://127.0.0.1:3000/users/userslist").then(Response => {
+        this.tableData = Response.data;
+      });
+    },
+    // 修改表单提交函数
+    submitForm(editForm) {
+      this.$refs[editForm].validate(valid => {
+        if (valid) {
+          // 收集新数据
+          let data = {
+            username: this.editForm.username,
+            password: this.editForm.password,
+            usergroup: this.editForm.usergroup,
+            editid: this.editid
+          };
+
+          this.axios
+            .post("http://127.0.0.1:3000/users/saveedit", qs.stringify(data), {
+              Header: { "Content-Type": "application/x-www-form-urlencoded" }
+            })
+            .then(Response => {
+              if (Response.data.errCode == 1) {
+                this.$message({
+                  type: "success",
+                  message: Response.data.errMsg
+                });
+              } else {
+                this.$message.err(`${Response.data.errMsg}`);
+              }
+            });
+          this.getuserlist();
+          this.dialogFormVisible = false;
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
+    },
+    // 删除勾选
+    deleteall() {
+      let idArr = this.selecteduser.map(value => {
+        return value.id;
+      });
+
+      // 判断数据
+      if (!idArr.length) {
+        this.$message.error(`请选择再操作`);
+        return;
+      }
+      let params = { idArr: JSON.stringify(idArr) };
+      this.axios
+        .post("http://127.0.0.1:3000/users/deteleall", qs.stringify(params), {
+          Header: { "Content-Type": "application/x-www-form-urlencoded" }
+        })
+        .then(Response => {
+          if (Response.data.errCode == 1) {
+            this.$message({
+              type: "success",
+              message: Response.data.errMsg
+            });
+            this.getuserlist();
+          } else {
+            this.$message.err(`${Response.data.errMsg}`);
+          }
+        });
     }
   }
 };
@@ -105,11 +245,22 @@ export default {
     .el-card {
       .el-card__header {
         font-weight: 700;
+        font-size: 15px;
       }
       .el-card__body {
         .item {
           .el-alert {
             margin: 10px 0;
+          }
+        }
+        .el-dialog {
+          .el-dialog__header {
+            font-weight: 700;
+          }
+          .el-dialog__body {
+            .el-form {
+              width: 75%;
+            }
           }
         }
       }
