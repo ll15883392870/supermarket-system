@@ -9,7 +9,7 @@
       <div class="username">
         <el-dropdown trigger="click">
           <span class="el-dropdown-link">
-            admin
+            {{username}}
             <i class="el-icon-arrow-down el-icon--right"></i>
           </span>
           <el-dropdown-menu slot="dropdown">
@@ -31,7 +31,9 @@
 <script>
 export default {
   data() {
-    return {};
+    return {
+      username:'',
+    };
   },
   methods: {
     person() {
@@ -52,7 +54,13 @@ export default {
         }
       });
     }
-  }
+  },
+  created() {
+    //发送请求 获取用户名
+    this.axios.get("http://127.0.0.1:3000/users/getusername").then(Response=>{
+      this.username=Response.data
+    })
+  },
 };
 </script>
 <style lang="less">

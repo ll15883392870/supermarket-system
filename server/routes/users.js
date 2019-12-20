@@ -66,15 +66,81 @@ router.get('/checkislogin', (req, res) => {
 
 })
 
+//显示当前登录名
+router.get('/getusername', (req, res) => {
+  //从cookie中获取用户名
+  let username = req.cookies.username;
+  res.send(username)
+})
+
 //退出登录请求
 router.get('/exitlogin', (req, res) => {
   res.clearCookie('userid'),
-  res.clearCookie('username')
+    res.clearCookie('username')
   res.send({
     "Code": "1",
     "Msg": '退出成功'
   })
 
+})
+
+//检查旧密码是否正确
+router.get('/checkoldpw', (req, res) => {
+  let {
+    oldpwd
+  } = req.query;
+  let id = req.cookies.userid;
+  const sqlstr = `select * from users where id=${id}`;
+  connection.query(sqlstr, (err, data) => {
+    if (err) {
+      throw err
+    } else {
+      if (data.length) {
+        if (oldpwd === data[0].password) {
+          //正确
+          res.send({
+            "Code": 1,
+            "Msg": "旧密码输入正确"
+          })
+        } else {
+          res.send({
+            "Code": 0,
+            "errMsg": "旧密码输入不正确"
+          })
+        }
+      }
+    }
+  })
+
+})
+
+//修改旧密码
+router.get('/updateoldpwd', (req, res) => {
+  let {
+    newpwd
+  } = req.query
+  let id = req.cookies.userid
+  const sqlstr = `update users set password='${newpwd}' where id='${id}'`
+  connection.query(sqlstr, (err, data) => {
+    if (err) {
+      throw err
+    } else {
+      //如果受影响行数>0成功
+      if (data.affectedRows > 0) {
+        res.clearCookie('userid'),
+          res.clearCookie('username')
+        res.send({
+          "Code": 1,
+          "Msg": "修改密码成功"
+        })
+      } else {
+        res.send({
+          "errCode": 0,
+          "errMsg": "修改密码失败"
+        })
+      }
+    }
+  })
 })
 
 // 接收添加账号请求
@@ -108,16 +174,38 @@ router.post('/adduser', (req, res) => {
   })
 })
 
-//接收账号列表请求
+//接收分页账号列表请求
 router.get('/userslist', (req, res) => {
-  const sqlstr = `select * from users order by date desc`
+  //currentPage当前页码 pageSize每页显示多少条
+  let {
+    currentPage,
+    pageSize
+  } = req.query;
+  currentPage = currentPage ? currentPage : 1;
+  pageSize = pageSize ? pageSize : 3;
+  let sqlstr = `select * from users order by date desc`
   connection.query(sqlstr, (err, data) => {
     if (err) {
       throw err;
     } else {
+      //数据总条数
+      let totalcount = data.length
+      let n = (currentPage - 1) * pageSize; //跳过多少条显示数据
+      sqlstr += ` limit ${n},${pageSize}`
+      connection.query(sqlstr, (err, data) => {
+        if (err) {
+          throw data
+        } else {
+          res.send({
+            "totalcount": totalcount,
+            "data": data
+          })
+        }
+      })
 
+      // 分页查询语句
       //查询数据返回至前端
-      res.send(data)
+      // res.send(data)
     }
   })
 

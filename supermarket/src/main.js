@@ -23,21 +23,20 @@ router.beforeEach((to, from, next) => {
   // 发送请求去检查用户是否登陆（是否有cookie)
   axios.get("http://127.0.0.1:3000/users/checkislogin").then(Response => {
     isLogin = Response.data.isLogin;
-    if (!isLogin) {
-      if (to.path !== '/login') {
-        return next({
-          "path": "/login"
-        })
-      } 
-    } else {
+    if (isLogin) {
       //已经登陆
       // 放行
       next()
+    } else {
+      if (to.path == '/login') {
+        next();
+      } else{
+        return next({
+          "path": "/login"
+        })
+      }
     }
   })
-  next()
-
-
 })
 
 Vue.filter("dataFormat", function (dataStr, patten = "YYYY-MM-DD HH:mm:ss") {

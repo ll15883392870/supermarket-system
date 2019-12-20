@@ -64,6 +64,20 @@
             </div>
           </el-dialog>
 
+          <!-- 分页 -->
+          <div style="margin-top: 20px;text-align: center;">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[1,2,3,4,5,20, 25]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalcount"
+            ></el-pagination>
+          </div>
+
+          <!-- 删除勾选 -->
           <div style="margin-top: 20px">
             <el-button type="danger" @click="deleteall()">删除勾选</el-button>
             <el-button @click="toggleSelection()">取消选择</el-button>
@@ -82,6 +96,9 @@ import Footer from "@/components/footer.vue";
 export default {
   data() {
     return {
+      pageSize: 3, //默认每页显示条数
+      currentPage: 1, //当前页
+      totalcount: 10, //数据总条数
       selecteduser: [], //保存选择用户
       dialogFormVisible: false,
       editid: "",
@@ -125,6 +142,19 @@ export default {
     this.getuserlist();
   },
   methods: {
+    //每页显示多少条改变
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.getuserlist();
+      console.log(`每页 ${val} 条`);
+    },
+    //当前页（即页码数改变）
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this.getuserlist();
+      console.log(`当前页: ${val}`);
+    },
+
     toggleSelection() {
       //取消选择
       this.$refs.multipleTable.clearSelection();
@@ -162,11 +192,25 @@ export default {
         });
       this.getuserlist();
     },
-    // 获取所有数据
+    // 利用分页获取所有数据
     getuserlist() {
-      this.axios.get("http://127.0.0.1:3000/users/userslist").then(Response => {
-        this.tableData = Response.data;
-      });
+      // 当前页码
+      let currentPage = this.currentPage;
+      //每页显示多少条
+      let pageSize = this.pageSize;
+      this.axios
+        .get(
+          `http://127.0.0.1:3000/users/userslist?pageSize=${pageSize}&currentPage=${currentPage}`
+        )
+        .then(Response => {
+          if (!Response.data.data.length&&this.currentPage!=1) {
+            this.currentPage -= 1;
+            this.getuserlist();
+          } else {
+            this.tableData = Response.data.data;
+            this.totalcount = Response.data.totalcount;
+          }
+        });
     },
     // 修改表单提交函数
     submitForm(editForm) {
