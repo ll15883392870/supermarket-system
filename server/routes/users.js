@@ -66,6 +66,42 @@ router.get('/checkislogin', (req, res) => {
 
 })
 
+//接收查询用户是否存在请求
+router.get('/lookuser', (req, res) => {
+  let sqlstr = `select username from users`
+  connection.query(sqlstr, (err, data) => {
+    if (err) {
+      throw err
+    } else {
+        res.send(data)
+    }
+  })
+})
+
+//接收插入用户请求
+router.get('/insertuser',(req,res)=>{
+    let {username,password}=req.query;
+    let sqlstr=`insert into users (username,password) values('${username}','${password}')`
+    connection.query(sqlstr,(err,data)=>{
+      if(err){
+        throw err
+      }else{
+          //如果受影响行数>0成功
+      if (data.affectedRows > 0) {
+        res.send({
+          "Code": 1,
+          "Msg": "注册成功"
+        })
+      } else {
+        res.send({
+          "errCode": 0,
+          "errMsg": "注册失败"
+        })
+      }
+      }
+    })
+})
+
 //显示当前登录名
 router.get('/getusername', (req, res) => {
   //从cookie中获取用户名
@@ -252,7 +288,7 @@ router.get('/edituser', (req, res) => {
   })
 })
 
-//接收保存用户的请求
+//接收保存修改账户的请求
 router.post('/saveedit', (req, res) => {
   let {
     username,

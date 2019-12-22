@@ -22,6 +22,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm('loginForm')">登录</el-button>
+          <el-button type="primary" @click="register()">注册</el-button>
           <el-button @click="resetForm('loginForm')">重置</el-button>
         </el-form-item>
       </el-form>
@@ -34,6 +35,7 @@ import qs from "qs";
 export default {
   data() {
     return {
+      flag: true,
       loginForm: {
         username: "",
         password: ""
@@ -53,6 +55,7 @@ export default {
     };
   },
   methods: {
+    // 登录
     submitForm(formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
@@ -62,7 +65,7 @@ export default {
             password: this.loginForm.password
           };
           // 设置axios允许携带cookie
-          this.axios.defaults.withCredentials=true;
+          this.axios.defaults.withCredentials = true;
           this.axios
             .post(
               "http://127.0.0.1:3000/users/checklogin",
@@ -91,8 +94,61 @@ export default {
         }
       });
     },
+    // 重置
     resetForm(formName) {
       this.$refs[formName].resetFields();
+    },
+    // 查询用户是否存在并且注册
+    register(flag) {
+      let username = this.loginForm.username;
+      let password = this.loginForm.password;
+      this.axios.get(`http://127.0.0.1:3000/users/lookuser`).then(Response => {
+        // Response.data.forEach(item => {
+        //   if (item.username == username) {
+        //     this.$message.error("用户已存在");
+        //     this.loginForm.username = "";
+        //     this.loginForm.password = "";
+        //     return;
+        //   }
+        //   return;
+        // });
+
+        let nameArr = Response.data.map(v => {
+          return v.username;
+        });
+        for (let i = 0; i < nameArr.length; i++) {
+          if (username == nameArr[i]) {
+            this.$message.error("用户已存在");
+            return;
+          }
+        }
+        this.insert();
+      });
+    },
+
+    //插入用户名和密码方法
+    insert() {
+      if (this.loginForm.username == "" || this.loginForm.password == "") {
+        return;
+      } else {
+        let username = this.loginForm.username;
+        let password = this.loginForm.password;
+        this.axios
+          .get(
+            `http://127.0.0.1:3000/users/insertuser?username=${username}&password=${password}`
+          )
+          .then(Response => {
+            if (Response.data.Code == 1) {
+              this.$message({
+                type: "success",
+                message: Response.data.Msg
+              });
+            } else {
+              this.$message.error(Response.data.errMsg);
+            }
+          });
+        this.flag = false;
+      }
     }
   }
 };

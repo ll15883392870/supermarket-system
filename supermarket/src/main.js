@@ -39,7 +39,7 @@ router.beforeEach((to, from, next) => {
   })
 })
 
-Vue.filter("dataFormat", function (dataStr, patten = "YYYY-MM-DD HH:mm:ss") {
+Vue.filter("dataFormat", function (dataStr, patten = "YYYY-MM-DD") {
   return moment(dataStr).format(patten)
 })
 
