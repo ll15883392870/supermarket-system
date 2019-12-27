@@ -8,8 +8,11 @@ import store from './store'
 import axios from 'axios'
 import moment from 'moment'
 
+
 Vue.prototype.axios = axios
 Vue.use(ElementUI);
+
+
 
 //全局路由守卫
 router.beforeEach((to, from, next) => {

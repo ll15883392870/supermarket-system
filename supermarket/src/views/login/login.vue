@@ -32,6 +32,7 @@
 
 <script>
 import qs from "qs";
+import Store from '@/store/index.js'
 export default {
   data() {
     return {
@@ -55,6 +56,7 @@ export default {
     };
   },
   methods: {
+
     // 登录
     submitForm(formName) {
       this.$refs[formName].validate(valid => {
@@ -76,6 +78,7 @@ export default {
             )
             .then(Response => {
               if (Response.data.errCode == 1) {
+                this.id=Response.data.id
                 this.$message({
                   type: "success",
                   message: Response.data.Msg
@@ -86,7 +89,8 @@ export default {
                 }, 1500);
               } else {
                 this.$message.error(`${Response.data.errMsg}`);
-              }
+              };
+              this.lookusergroup()
             });
         } else {
           console.log("error submit!!");
@@ -133,9 +137,10 @@ export default {
       } else {
         let username = this.loginForm.username;
         let password = this.loginForm.password;
+        let usergroup="普通用户"
         this.axios
           .get(
-            `http://127.0.0.1:3000/users/insertuser?username=${username}&password=${password}`
+            `http://127.0.0.1:3000/users/insertuser?username=${username}&password=${password}&usergroup=${usergroup}`
           )
           .then(Response => {
             if (Response.data.Code == 1) {
@@ -149,9 +154,23 @@ export default {
           });
         this.flag = false;
       }
+    },
+    // 查看用户组
+    lookusergroup(){
+      let id=this.id
+     this.axios.get(`http://127.0.0.1:3000/users/lookusergroup?id=${id}`).then(Response=>{
+       if(Response.data.length>0){
+        //将usergroup传给vuex
+         Store.commit('changeval',Response.data[0].usergroup)
+       }else{
+         console.log("设置vuex用户组失败");
+       }
+     })
     }
-  }
+
+  },
 };
+
 </script>
 <style lang="less">
 .login {

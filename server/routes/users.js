@@ -28,13 +28,15 @@ router.post('/checklogin', (req, res) => {
       throw err
     } else {
       if (data.length) {
+
         // 设置cookie
         res.cookie("userid", data[0].id)
         res.cookie("username", data[0].username)
 
         res.send({
           "errCode": 1,
-          "Msg": "家乐美欢迎您"
+          "Msg": "家乐美欢迎您",
+          "id":data[0].id
         })
       } else {
         res.send({
@@ -66,6 +68,19 @@ router.get('/checkislogin', (req, res) => {
 
 })
 
+//接收查看用户组请求
+router.get('/lookusergroup',(req,res)=>{
+  let {id}=req.query
+  let sqlstr=`select * from users where id='${id}'`
+  connection.query(sqlstr,(err,data)=>{
+    if(err){
+      throw err
+    }else{
+      res.send(data)
+    }
+  })
+})
+
 //接收查询用户是否存在请求
 router.get('/lookuser', (req, res) => {
   let sqlstr = `select username from users`
@@ -80,8 +95,8 @@ router.get('/lookuser', (req, res) => {
 
 //接收插入用户请求
 router.get('/insertuser',(req,res)=>{
-    let {username,password}=req.query;
-    let sqlstr=`insert into users (username,password) values('${username}','${password}')`
+    let {username,password,usergroup}=req.query;
+    let sqlstr=`insert into users (username,password,usergroup) values('${username}','${password}','${usergroup}')`
     connection.query(sqlstr,(err,data)=>{
       if(err){
         throw err
@@ -343,6 +358,19 @@ router.post('/deteleall', (req, res) => {
     }
   })
 
+})
+
+//个人中心获得数据请求
+router.get('/getinformation',(req,res)=>{
+  let id=req.cookies.userid;
+  let sqlstr=`select * from users where id=${id}`
+  connection.query(sqlstr,(err,data)=>{
+    if(err){
+      throw err
+    }else{
+      res.send(data)
+    }
+  })
 })
 
 module.exports = router;

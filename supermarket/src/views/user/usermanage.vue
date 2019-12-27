@@ -91,6 +91,7 @@
 </template>
 <script>
 import qs from "qs";
+import Store from "@/store/index.js";
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
 export default {
@@ -140,6 +141,13 @@ export default {
   },
   created() {
     this.getuserlist();
+    // console.log(Store.state.usergroup);
+    // for (let line in document.cookie.split(";")) {
+    //   var value = line.split("=", 8)
+    // }
+
+    // console.log(value);
+ 
   },
   methods: {
     //每页显示多少条改变
@@ -177,20 +185,25 @@ export default {
     },
     //   删除函数
     handleDelete(id) {
-      this.axios
-        .get(`http://127.0.0.1:3000/users/deleuser?id=${id}`)
-        .then(Response => {
-          //接收后端响应数据
-          if (Response.data.errCode == 1) {
-            this.$message({
-              type: "success",
-              message: Response.data.errMsg
-            });
-          } else {
-            this.$message.err(`${Response.data.errMsg}`);
-          }
-        });
-      this.getuserlist();
+      if (Store.state.usergroup == "超级管理员") {
+        this.axios
+          .get(`http://127.0.0.1:3000/users/deleuser?id=${id}`)
+          .then(Response => {
+            //接收后端响应数据
+            if (Response.data.errCode == 1) {
+              this.$message({
+                type: "success",
+                message: Response.data.errMsg
+              });
+            } else {
+              this.$message.err(`${Response.data.errMsg}`);
+            }
+          });
+        this.getuserlist();
+      } else {
+        this.$message.error(`对不起您的权限不够`);
+        return;
+      }
     },
     // 利用分页获取所有数据
     getuserlist() {
@@ -203,7 +216,7 @@ export default {
           `http://127.0.0.1:3000/users/userslist?pageSize=${pageSize}&currentPage=${currentPage}`
         )
         .then(Response => {
-          if (!Response.data.data.length&&this.currentPage!=1) {
+          if (!Response.data.data.length && this.currentPage != 1) {
             this.currentPage -= 1;
             this.getuserlist();
           } else {
@@ -248,31 +261,36 @@ export default {
     },
     // 删除勾选
     deleteall() {
-      let idArr = this.selecteduser.map(value => {
-        return value.id;
-      });
+      if (Store.state.usergroup == "超级管理员") {
+        let idArr = this.selecteduser.map(value => {
+          return value.id;
+        });
 
-      // 判断数据
-      if (!idArr.length) {
-        this.$message.error(`请选择再操作`);
+        // 判断数据
+        if (!idArr.length) {
+          this.$message.error(`请选择再操作`);
+          return;
+        }
+        let params = { idArr: JSON.stringify(idArr) };
+        this.axios
+          .post("http://127.0.0.1:3000/users/deteleall", qs.stringify(params), {
+            Header: { "Content-Type": "application/x-www-form-urlencoded" }
+          })
+          .then(Response => {
+            if (Response.data.errCode == 1) {
+              this.$message({
+                type: "success",
+                message: Response.data.errMsg
+              });
+              this.getuserlist();
+            } else {
+              this.$message.err(`${Response.data.errMsg}`);
+            }
+          });
+      } else {
+        this.$message.error(`对不起您的权限不够`);
         return;
       }
-      let params = { idArr: JSON.stringify(idArr) };
-      this.axios
-        .post("http://127.0.0.1:3000/users/deteleall", qs.stringify(params), {
-          Header: { "Content-Type": "application/x-www-form-urlencoded" }
-        })
-        .then(Response => {
-          if (Response.data.errCode == 1) {
-            this.$message({
-              type: "success",
-              message: Response.data.errMsg
-            });
-            this.getuserlist();
-          } else {
-            this.$message.err(`${Response.data.errMsg}`);
-          }
-        });
     }
   }
 };

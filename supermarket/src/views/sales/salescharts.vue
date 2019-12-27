@@ -23,8 +23,6 @@ import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
 import echarts from "echarts";
 export default {
-  data() {},
-  methods: {},
   components: {
     Header,
     Footer

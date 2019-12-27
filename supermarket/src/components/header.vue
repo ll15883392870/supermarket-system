@@ -29,6 +29,7 @@
   </div>
 </template>
 <script>
+import Store from '@/store/index.js'
 export default {
   data() {
     return {
@@ -51,6 +52,7 @@ export default {
           setTimeout(() => {
             this.$router.push("/login");
           }, 2000);
+          Store.commit('deleall')
         }
       });
     }
